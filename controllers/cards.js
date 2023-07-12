@@ -4,7 +4,7 @@ const Card = require('../models/card');
 function getAllCards(req, res) {
   Card.find({})
     .then(cards => res.status(200).send(cards))
-    .catch(err =>
+    .catch(
       res.status(500).send({
         message: `Произошла ошибка: Server Error (ошибка сервера)`
       })
