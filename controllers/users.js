@@ -19,11 +19,16 @@ function getUserById(req, res) {
       }
       return res.status(200).send(user);
     })
-    .catch(err =>
+    .catch(err => {
+      if (err.name === 'CastError') {
+        return res.status(400).send({
+          message: `Произошла ошибка:Bad Request («неправильный, некорректный запрос»)`
+        });
+      }
       res.status(500).send({
-        message: `Произошла ошибка: Server Error (ошибка сервера) =>>${err.name}`
-      })
-    );
+        message: `Произошла ошибка: Server Error (ошибка сервера)`
+      });
+    });
 }
 //  POST /users — создаёт пользователя
 function postNewUser(req, res) {

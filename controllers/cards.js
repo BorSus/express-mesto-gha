@@ -65,7 +65,12 @@ function deleteCard(req, res) {
 function putLike(req, res) {
   const { id } = req.params;
   Card.findByIdAndUpdate(id, { $addToSet: { likes: req.user._id } }, { new: true })
-    .then(card => res.status(200).send(card))
+    .then(card => {
+      if (!card) {
+        return res.status(404).send({ message: 'Произошла ошибка: Not Found («не найдено»)' });
+      }
+      res.status(200).send(card);
+    })
     .catch(err => {
       if (err.name === 'DocumentNotFoundError') {
         return res.status(404).send({
@@ -87,7 +92,12 @@ function putLike(req, res) {
 function deleteLike(req, res) {
   const { id } = req.params;
   Card.findByIdAndUpdate(id, { $pull: { likes: req.user._id } }, { new: true })
-    .then(card => res.status(200).send(card))
+    .then(card => {
+      if (!card) {
+        return res.status(404).send({ message: 'Произошла ошибка: Not Found («не найдено»)' });
+      }
+      res.status(200).send(card);
+    })
     .catch(err => {
       if (err.name === 'DocumentNotFoundError') {
         return res.status(404).send({ message: 'Произошла ошибка: Not Found («не найдено»)' });
