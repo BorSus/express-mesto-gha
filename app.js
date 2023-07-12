@@ -32,6 +32,11 @@ app.use('/', require('./routes/users'));
 //  Подключаем пути пользователей  routes/cards
 app.use('/', require('./routes/cards'));
 
+//  Подключаем пути Not Found /*
+app.use('/*', (req, res) => {
+  res.status(404).send({ message: 'Произошла ошибка: Not Found («не найдено»)' });
+});
+
 app.listen(PORT, () => {
   console.log(`Порт приложения ${PORT}`);
 });
