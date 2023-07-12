@@ -14,25 +14,24 @@ mongoose
   .then(() => {
     console.log('DB connect');
   })
-  .catch(() => {
-    console.log('DB not connect');
+  .catch(err => {
+    console.log(`DB not connect ==> ${err}`);
   });
-// собирания JSON-формата
+// формирование JSON-формата
 app.use(bodyParser.json());
-
+// использование id
 app.use((req, res, next) => {
   req.user = {
     _id: '64ac680996d39959db5d6105'
   };
   next();
 });
-
-//  Подключаем пути пользователей  routes/users
+//  Подключение путей пользователей  routes/users
 app.use('/', require('./routes/users'));
-//  Подключаем пути пользователей  routes/cards
+//  Подключение путей карточек  routes/cards
 app.use('/', require('./routes/cards'));
 
-//  Подключаем пути Not Found /*
+//  Подключение путей Not Found /*
 app.use('/*', (req, res) => {
   res.status(404).send({ message: 'Произошла ошибка: Not Found («не найдено»)' });
 });

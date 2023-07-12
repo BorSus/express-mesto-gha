@@ -6,9 +6,7 @@ function getAllCards(req, res) {
     .then(cards => res.status(200).send(cards))
     .catch(err =>
       res.status(500).send({
-        message: `Произошла ошибка: Server Error (ошибка сервера)=>> ${Object.values(err.errors)
-          .map(error => error.message)
-          .join(', ')}`
+        message: `Произошла ошибка: Server Error (ошибка сервера)`
       })
     );
 }
