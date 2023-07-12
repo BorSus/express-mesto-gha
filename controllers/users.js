@@ -81,7 +81,7 @@ function patchUserInfo(req, res) {
 // PATCH /users/me/avatar — обновляет аватар
 function patchUserAvatar(req, res) {
   const { avatar } = req.body;
-  User.findByIdAndUpdate(req.user._id, { avatar }, { new: true })
+  User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
     .then(user => res.status(200).send(user))
     .catch(err => {
       if (err.name === 'CastError' || err.name === 'ValidationError') {
