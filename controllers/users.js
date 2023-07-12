@@ -25,7 +25,7 @@ function getUserById(req, res) {
           message: `Произошла ошибка:Bad Request («неправильный, некорректный запрос»)`
         });
       }
-      res.status(500).send({
+      return res.status(500).send({
         message: `Произошла ошибка: Server Error (ошибка сервера)`
       });
     });

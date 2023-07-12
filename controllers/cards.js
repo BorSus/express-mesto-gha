@@ -48,11 +48,7 @@ function deleteCard(req, res) {
     .catch(err => {
       if (err.name === 'CastError') {
         return res.status(400).send({
-          message: `Произошла ошибка:Bad Request («неправильный, некорректный запрос»)=>> ${Object.values(
-            err.errors
-          )
-            .map(error => error.message)
-            .join(', ')}`
+          message: `Произошла ошибка:Bad Request («неправильный, некорректный запрос»)`
         });
       }
       return res.status(500).send({
@@ -69,7 +65,7 @@ function putLike(req, res) {
       if (!card) {
         return res.status(404).send({ message: 'Произошла ошибка: Not Found («не найдено»)' });
       }
-      res.status(200).send(card);
+      return res.status(200).send(card);
     })
     .catch(err => {
       if (err.name === 'DocumentNotFoundError') {
@@ -96,7 +92,7 @@ function deleteLike(req, res) {
       if (!card) {
         return res.status(404).send({ message: 'Произошла ошибка: Not Found («не найдено»)' });
       }
-      res.status(200).send(card);
+      return res.status(200).send(card);
     })
     .catch(err => {
       if (err.name === 'DocumentNotFoundError') {
