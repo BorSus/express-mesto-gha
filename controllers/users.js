@@ -1,4 +1,5 @@
 const User = require('../models/user');
+
 //  GET /users — возвращает всех пользователей
 function getAllUsers(req, res) {
   User.find({})
@@ -15,7 +16,7 @@ function getUserById(req, res) {
   User.findById(id)
     .orFail()
     .then(user => {
-      return res.status(200).send(user);
+      res.status(200).send(user);
     })
     .catch(err => {
       console.log(err.name);

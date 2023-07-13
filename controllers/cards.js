@@ -39,7 +39,7 @@ function deleteCard(req, res) {
   Card.findByIdAndRemove(id)
     .orFail()
     .then(card => {
-      return res.status(200).send(card);
+      res.status(200).send(card);
     })
     .catch(err => {
       if (err.name === 'CastError') {
@@ -64,7 +64,7 @@ function putLike(req, res) {
   Card.findByIdAndUpdate(id, { $addToSet: { likes: req.user._id } }, { new: true })
     .orFail()
     .then(card => {
-      return res.status(200).send(card);
+      res.status(200).send(card);
     })
     .catch(err => {
       if (err.name === 'DocumentNotFoundError') {
@@ -94,7 +94,7 @@ function deleteLike(req, res) {
   Card.findByIdAndUpdate(id, { $pull: { likes: req.user._id } }, { new: true })
     .orFail()
     .then(card => {
-      return res.status(200).send(card);
+      res.status(200).send(card);
     })
     .catch(err => {
       if (err.name === 'DocumentNotFoundError') {
