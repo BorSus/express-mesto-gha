@@ -4,13 +4,17 @@ const mongoose = require('mongoose');
 
 const bodyParser = require('body-parser');
 
-const { PORT = 3000 } = process.env;
+const helmet = require('helmet');
+
+const { PORT = 3000, DB_URL = 'mongodb://127.0.0.1:27017/mestodb' } = process.env;
 
 const app = express();
+// использовать библиотеку helmet, это набор middleware функций для express, который помогает защитить ваше приложение
+app.use(helmet());
 
 //  Подключение к БД
 mongoose
-  .connect('mongodb://127.0.0.1:27017/mestodb')
+  .connect(DB_URL)
   .then(() => {
     console.log('DB connect');
   })

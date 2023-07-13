@@ -37,16 +37,19 @@ function postCard(req, res) {
 function deleteCard(req, res) {
   const { id } = req.params;
   Card.findByIdAndRemove(id)
+    .orFail()
     .then(card => {
-      if (!card) {
-        return res.status(404).send({ message: 'Произошла ошибка:Not Found («не найдено»)' });
-      }
       return res.status(200).send(card);
     })
     .catch(err => {
       if (err.name === 'CastError') {
         return res.status(400).send({
-          message: `Произошла ошибка:Bad Request («неправильный, некорректный запрос»)`
+          message: `Произошла ошибка: Bad Request («неправильный, некорректный запрос»)`
+        });
+      }
+      if (err.name === 'DocumentNotFoundError') {
+        return res.status(404).send({
+          message: 'Произошла ошибка: Not Found («не найдено»)'
         });
       }
       return res.status(500).send({
@@ -59,21 +62,24 @@ function deleteCard(req, res) {
 function putLike(req, res) {
   const { id } = req.params;
   Card.findByIdAndUpdate(id, { $addToSet: { likes: req.user._id } }, { new: true })
+    .orFail()
     .then(card => {
-      if (!card) {
-        return res.status(404).send({ message: 'Произошла ошибка: Not Found («не найдено»)' });
-      }
       return res.status(200).send(card);
     })
     .catch(err => {
       if (err.name === 'DocumentNotFoundError') {
         return res.status(404).send({
-          message: 'Произошла ошибка:Not Found («не найдено»)'
+          message: 'Произошла ошибка: Not Found («не найдено»)'
         });
       }
       if (err.name === 'CastError') {
         return res.status(400).send({
-          message: `Произошла ошибка:Bad Request («неправильный, некорректный запрос»)`
+          message: `Произошла ошибка: Bad Request («неправильный, некорректный запрос»)`
+        });
+      }
+      if (err.name === 'DocumentNotFoundError') {
+        return res.status(404).send({
+          message: 'Произошла ошибка: Not Found («не найдено»)'
         });
       }
       return res.status(500).send({
@@ -86,10 +92,8 @@ function putLike(req, res) {
 function deleteLike(req, res) {
   const { id } = req.params;
   Card.findByIdAndUpdate(id, { $pull: { likes: req.user._id } }, { new: true })
+    .orFail()
     .then(card => {
-      if (!card) {
-        return res.status(404).send({ message: 'Произошла ошибка: Not Found («не найдено»)' });
-      }
       return res.status(200).send(card);
     })
     .catch(err => {
@@ -98,7 +102,7 @@ function deleteLike(req, res) {
       }
       if (err.name === 'CastError') {
         return res.status(400).send({
-          message: `Произошла ошибка:Bad Request («неправильный, некорректный запрос»)`
+          message: `Произошла ошибка: Bad Request («неправильный, некорректный запрос»)`
         });
       }
       return res.status(500).send({

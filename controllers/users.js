@@ -12,14 +12,16 @@ function getAllUsers(req, res) {
 //  GET /users/:userId - возвращает пользователя по _id
 function getUserById(req, res) {
   const { id } = req.params;
-  return User.findById(id)
+  User.findById(id)
+    .orFail()
     .then(user => {
-      if (!user) {
-        return res.status(404).send({ message: 'Произошла ошибка: Not Found («не найдено»)' });
-      }
       return res.status(200).send(user);
     })
     .catch(err => {
+      console.log(err.name);
+      if (err.name === 'DocumentNotFoundError') {
+        return res.status(404).send({ message: 'Произошла ошибка: Not Found («не найдено»)' });
+      }
       if (err.name === 'CastError') {
         return res.status(400).send({
           message: `Произошла ошибка:Bad Request («неправильный, некорректный запрос»)`
@@ -56,6 +58,7 @@ function postNewUser(req, res) {
 function patchUserInfo(req, res) {
   const { name, about } = req.body;
   User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
+    .orFail()
     .then(user => res.status(200).send(user))
     .catch(err => {
       if (err.name === 'CastError' || err.name === 'ValidationError') {
@@ -82,6 +85,7 @@ function patchUserInfo(req, res) {
 function patchUserAvatar(req, res) {
   const { avatar } = req.body;
   User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
+    .orFail()
     .then(user => res.status(200).send(user))
     .catch(err => {
       if (err.name === 'CastError' || err.name === 'ValidationError') {
@@ -93,7 +97,6 @@ function patchUserAvatar(req, res) {
             .join(', ')}`
         });
       }
-
       if (err.name === 'DocumentNotFoundError') {
         return res.status(404).send({
           message: 'Произошла ошибка: Not Found («не найдено»)'
