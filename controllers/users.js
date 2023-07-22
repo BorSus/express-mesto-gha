@@ -68,7 +68,7 @@ async function login(req, res, next) {
 }
 // GET /users/me
 function getCurrentUser(req, res, next) {
-  User.findById('req.user._id')
+  User.findById(req.user._id)
     .then(user => {
       if (!user) {
         throw new NotFound('Пользователь не найден.');
