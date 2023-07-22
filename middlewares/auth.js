@@ -1,5 +1,7 @@
 const jwt = require('jsonwebtoken');
+
 const Unauthorized = require('../utils/errors/unauthorized');
+
 const secretKey = 'Синхрофазотрон';
 
 function createToken(payload) {
@@ -12,7 +14,7 @@ function checkToken(token) {
   }
   try {
     return jwt.verify(token, secretKey);
-  } catch {
+  } catch (err) {
     return false;
   }
 }
@@ -26,7 +28,6 @@ function checkAuthorization(req, res, next) {
   if (!payload) {
     throw new Unauthorized(`Токен не прошел проверку`);
   }
-  //console.log(payload.payload._id);
   req.user = payload.payload;
 
   next();

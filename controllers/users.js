@@ -18,7 +18,12 @@ async function postNewUser(req, res, next) {
     }
     const hashPassword = await bcrypt.hash(password, 10);
     const user = await User.create({ email, password: hashPassword, name, about, avatar });
-    return res.status(201).send(user);
+    res.status(201).send({
+      name: user.name,
+      about: user.about,
+      avatar: user.avatar,
+      email: user.email
+    });
   } catch (err) {
     if (err.code === 11000) {
       next(new NotUnique(`Пользователь с таким email уже зарегистрирован`));
@@ -53,10 +58,10 @@ async function login(req, res, next) {
     if (!matchedPassword) {
       throw new Unauthorized(`Неправильный email или password`);
     }
-    payload = { _id: user._id };
+    const payload = { _id: user._id };
     const token = createToken(payload);
     res.cookie('jwt', token, { maxAge: 1000 * 60 * 60 * 24 * 7, httpOnly: true });
-    return res.status(200).send({ token });
+    res.status(200).send({ token });
   } catch (err) {
     next(err);
   }
@@ -65,7 +70,6 @@ async function login(req, res, next) {
 function getCurrentUser(req, res, next) {
   User.findById(req.user._id)
     .then(user => {
-      y;
       if (!user) {
         throw new NotFound('Пользователь не найден.');
       }

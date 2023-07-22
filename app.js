@@ -53,7 +53,6 @@ app.use('/', checkAuthorization, require('./routes/cards'));
 //  Подключение путей Not Found /*
 app.use('/*', (req, res, next) => {
   next(new NotFound(`Такого url не существует`));
-  return;
 });
 app.use(errors());
 app.use(controlErrors);

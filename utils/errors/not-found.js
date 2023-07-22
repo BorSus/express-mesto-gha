@@ -1,6 +1,6 @@
 class NotFound extends Error {
   constructor(message) {
-    super('Произошла ошибка: Not Found («не найдено»)==>' + message);
+    super(`Произошла ошибка: Not Found («не найдено»)==> ${message}`);
     this.statusCode = 404;
   }
 }

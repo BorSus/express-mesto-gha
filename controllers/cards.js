@@ -1,7 +1,6 @@
 const Card = require('../models/card');
 const NotFound = require('../utils/errors/not-found');
 const BadRequest = require('../utils/errors/bad-request');
-const NotUnique = require('../utils/errors/not-unique');
 const Unauthorized = require('../utils/errors/unauthorized');
 const Forbidden = require('../utils/errors/no-access');
 // GET /cards — возвращает все карточки
@@ -45,7 +44,7 @@ async function deleteCard(req, res, next) {
       throw new Forbidden(`Запрещено удалять карточки чужих авторов`);
     }
     await Card.deleteOne(card);
-    return res.status(200).send({
+    res.status(200).send({
       message: `${card} - delete `
     });
   } catch (err) {

@@ -1,16 +1,13 @@
 const { celebrate, Joi } = require('celebrate');
 
+const regexURL = /^(http|https):\/\/(www\.)?[a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]+$/;
 // Authorization
 //  POST /signup — создаёт пользователя
 const validatorSchemaPostNewUser = celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
-    avatar: Joi.string().pattern(
-      new RegExp(
-        "^(http|https|)://|[a-zA-Z0-9-.]+.[a-zA-Z](:[a-zA-Z0-9]*)?/?([a-zA-Z0-9-._?,'/\\+&amp;%$#=~])*[^.,)(s]$"
-      )
-    ),
+    avatar: Joi.string().regex(regexURL),
     email: Joi.string().email().required(),
     password: Joi.string().min(8).required()
   })
@@ -23,7 +20,7 @@ const validatorSchemaLogin = celebrate({
   })
 });
 
-//  Users
+// Users
 // GET /users/me
 const validatorSchemaGetCurrentUser = celebrate({
   params: Joi.object().keys({
@@ -45,19 +42,17 @@ const validatorSchemaPatchUserInfo = celebrate({
 });
 // PATCH /users/me/avatar — обновляет аватар
 const validatorSchemaPatchUserAvatar = celebrate({
-  body: Joi.object().keys({
-    avatar: Joi.string().pattern(new RegExp(' '))
-  })
+  body: Joi.object()
+    .keys({
+      avatar: Joi.string().regex(regexURL)
+    })
+    .required()
 });
-//Cards
+// Cards
 const validatorSchemaPostCard = celebrate({
   body: Joi.object().keys({
-    name: Joi.string().min(2).max(30),
-    link: Joi.string().pattern(
-      new RegExp(
-        "^(http|https|)://|[a-zA-Z0-9-.]+.[a-zA-Z](:[a-zA-Z0-9]*)?/?([a-zA-Z0-9-._?,'/\\+&amp;%$#=~])*[^.,)(s]$"
-      )
-    )
+    name: Joi.string().min(2).max(30).required(),
+    link: Joi.string().regex(regexURL).required()
   })
 });
 // DELETE /cards/:cardId — удаляет карточку по идентификатору
