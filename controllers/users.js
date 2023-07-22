@@ -1,17 +1,88 @@
+const bcrypt = require('bcryptjs');
+
 const User = require('../models/user');
 
+const { createToken } = require('../middlewares/auth');
+
+const NotFound = require('../utils/errors/not-found');
+const BadRequest = require('../utils/errors/bad-request');
+const NotUnique = require('../utils/errors/not-unique');
+const Unauthorized = require('../utils/errors/unauthorized');
+
+//  POST /signup — создаёт пользователя
+async function postNewUser(req, res, next) {
+  try {
+    const { email, password, name, about, avatar } = req.body;
+    if (!password) {
+      throw new BadRequest('password должен быть заполнен');
+    }
+    const hashPassword = await bcrypt.hash(password, 10);
+    const user = await User.create({ email, password: hashPassword, name, about, avatar });
+    return res.status(201).send(user);
+  } catch (err) {
+    if (err.code === 11000) {
+      next(new NotUnique(`Пользователь с таким email уже зарегистрирован`));
+      return;
+    }
+    if (err.name === 'CastError' || err.name === 'ValidationError') {
+      next(
+        new BadRequest(
+          `${Object.values(err.errors)
+            .map(error => error.message)
+            .join(', ')}`
+        )
+      );
+      return;
+    }
+    next(err);
+  }
+}
+
+// POST /signin - проверка пользователя, получение JWT
+async function login(req, res, next) {
+  const { email, password } = req.body;
+  try {
+    if (!email || !password) {
+      throw new BadRequest(`Не получен email(${email}) или password (${password})`);
+    }
+    const user = await User.findOne({ email }).select('+password');
+    if (!user) {
+      throw new Unauthorized(`Неправильный email или password`);
+    }
+    const matchedPassword = await bcrypt.compare(password, user.password);
+    if (!matchedPassword) {
+      throw new Unauthorized(`Неправильный email или password`);
+    }
+    payload = { _id: user._id };
+    const token = createToken(payload);
+    res.cookie('jwt', token, { maxAge: 1000 * 60 * 60 * 24 * 7, httpOnly: true });
+    return res.status(200).send({ token });
+  } catch (err) {
+    next(err);
+  }
+}
+// GET /users/me
+function getCurrentUser(req, res, next) {
+  User.findById(req.user._id)
+    .then(user => {
+      y;
+      if (!user) {
+        throw new NotFound('Пользователь не найден.');
+      }
+      res.status(200).send(user);
+    })
+    .catch(next);
+}
+
 //  GET /users — возвращает всех пользователей
-function getAllUsers(req, res) {
+function getAllUsers(req, res, next) {
   User.find({})
     .then(users => res.status(200).send(users))
-    .catch(() =>
-      res.status(500).send({
-        message: `Произошла ошибка: Server Error (ошибка сервера)`
-      })
-    );
+    .catch(next);
 }
+
 //  GET /users/:userId - возвращает пользователя по _id
-function getUserById(req, res) {
+function getUserById(req, res, next) {
   const { id } = req.params;
   User.findById(id)
     .orFail()
@@ -19,94 +90,73 @@ function getUserById(req, res) {
       res.status(200).send(user);
     })
     .catch(err => {
-      console.log(err.name);
       if (err.name === 'DocumentNotFoundError') {
-        return res.status(404).send({ message: 'Произошла ошибка: Not Found («не найдено»)' });
+        next(new NotFound(`Пользователь  ${id} не найден`));
+        return;
       }
       if (err.name === 'CastError') {
-        return res.status(400).send({
-          message: `Произошла ошибка:Bad Request («неправильный, некорректный запрос»)`
-        });
+        next(new BadRequest(`${err}`));
+        return;
       }
-      return res.status(500).send({
-        message: `Произошла ошибка: Server Error (ошибка сервера)`
-      });
+      next(err);
     });
 }
-//  POST /users — создаёт пользователя
-function postNewUser(req, res) {
-  const { name, about, avatar } = req.body;
-  User.create({ name, about, avatar })
-    .then(user => {
-      res.status(201).send(user);
-    })
-    .catch(err => {
-      if (err.name === 'CastError' || err.name === 'ValidationError') {
-        return res.status(400).send({
-          message: `Произошла ошибка:Bad Request («неправильный, некорректный запрос»)=>> ${Object.values(
-            err.errors
-          )
-            .map(error => error.message)
-            .join(', ')}`
-        });
-      }
-      return res.status(500).send({
-        message: `Произошла ошибка: Server Error (ошибка сервера)}`
-      });
-    });
-}
+
 // PATCH /users/me — обновляет профиль
-function patchUserInfo(req, res) {
+function patchUserInfo(req, res, next) {
   const { name, about } = req.body;
   User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
     .orFail()
     .then(user => res.status(200).send(user))
     .catch(err => {
       if (err.name === 'CastError' || err.name === 'ValidationError') {
-        return res.status(400).send({
-          message: `Произошла ошибка:Bad Request («неправильный, некорректный запрос»)=>> ${Object.values(
-            err.errors
+        next(
+          new BadRequest(
+            `${Object.values(err.errors)
+              .map(error => error.message)
+              .join(', ')}`
           )
-            .map(error => error.message)
-            .join(', ')}`
-        });
+        );
+        return;
       }
       if (err.name === 'DocumentNotFoundError') {
-        return res.status(404).send({
-          message: 'Произошла ошибка: Not Found («не найдено»)'
-        });
+        next(new NotFound(`Пользователь не найден`));
+        return;
       }
-
-      return res.status(500).send({
-        message: `Произошла ошибка: Server Error (ошибка сервера)}`
-      });
+      next(err);
     });
 }
 // PATCH /users/me/avatar — обновляет аватар
-function patchUserAvatar(req, res) {
+function patchUserAvatar(req, res, next) {
   const { avatar } = req.body;
   User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
     .orFail()
     .then(user => res.status(200).send(user))
     .catch(err => {
       if (err.name === 'CastError' || err.name === 'ValidationError') {
-        return res.status(400).send({
-          message: `Произошла ошибка:Bad Request («неправильный, некорректный запрос»)=>> ${Object.values(
-            err.errors
+        next(
+          new BadRequest(
+            `${Object.values(err.errors)
+              .map(error => error.message)
+              .join(', ')}`
           )
-            .map(error => error.message)
-            .join(', ')}`
-        });
+        );
+        return;
       }
       if (err.name === 'DocumentNotFoundError') {
-        return res.status(404).send({
-          message: 'Произошла ошибка: Not Found («не найдено»)'
-        });
+        next(new NotFound(`Пользователь не найден`));
+        return;
       }
-      return res.status(500).send({
-        message: `Произошла ошибка: Server Error (ошибка сервера)}`
-      });
+      next(err);
     });
 }
 
-module.exports = { getAllUsers, getUserById, postNewUser, patchUserInfo, patchUserAvatar };
+module.exports = {
+  getAllUsers,
+  getUserById,
+  postNewUser,
+  patchUserInfo,
+  patchUserAvatar,
+  login,
+  getCurrentUser
+};

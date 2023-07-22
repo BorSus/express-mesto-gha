@@ -1,65 +1,68 @@
 const Card = require('../models/card');
-
+const NotFound = require('../utils/errors/not-found');
+const BadRequest = require('../utils/errors/bad-request');
+const NotUnique = require('../utils/errors/not-unique');
+const Unauthorized = require('../utils/errors/unauthorized');
+const Forbidden = require('../utils/errors/no-access');
 // GET /cards — возвращает все карточки
-function getAllCards(req, res) {
+function getAllCards(req, res, next) {
   Card.find({})
     .then(cards => res.status(200).send(cards))
-    .catch(() =>
-      res.status(500).send({
-        message: `Произошла ошибка: Server Error (ошибка сервера)`
-      })
-    );
+    .catch(next);
 }
 
 // POST /cards — создаёт карточку
-function postCard(req, res) {
+function postCard(req, res, next) {
   const { name, link } = req.body;
   const owner = req.user._id;
+  if (!owner) {
+    throw new Unauthorized(`Пользователь не авторизован`);
+  }
   Card.create({ name, link, owner })
     .then(card => res.status(201).send(card))
     .catch(err => {
       if (err.name === 'CastError' || err.name === 'ValidationError') {
-        return res.status(400).send({
-          message: `Произошла ошибка:Bad Request («неправильный, некорректный запрос»)=>> ${Object.values(
-            err.errors
+        next(
+          new BadRequest(
+            `${Object.values(err.errors)
+              .map(error => error.message)
+              .join(', ')}`
           )
-            .map(error => error.message)
-            .join(', ')}`
-        });
+        );
+        return;
       }
-      return res.status(500).send({
-        message: `Произошла ошибка: Server Error (ошибка сервера)`
-      });
+      next(err);
     });
 }
 
 // DELETE /cards/:cardId — удаляет карточку по идентификатору
-function deleteCard(req, res) {
+async function deleteCard(req, res, next) {
   const { id } = req.params;
-  Card.findByIdAndRemove(id)
-    .orFail()
-    .then(card => {
-      res.status(200).send(card);
-    })
-    .catch(err => {
-      if (err.name === 'CastError') {
-        return res.status(400).send({
-          message: `Произошла ошибка: Bad Request («неправильный, некорректный запрос»)`
-        });
-      }
-      if (err.name === 'DocumentNotFoundError') {
-        return res.status(404).send({
-          message: 'Произошла ошибка: Not Found («не найдено»)'
-        });
-      }
-      return res.status(500).send({
-        message: `Произошла ошибка: Server Error (ошибка сервера)`
-      });
+  const owner = req.user._id;
+  try {
+    const card = await Card.findById(id).orFail();
+    if (card.owner.toString() !== owner) {
+      throw new Forbidden(`Запрещено удалять карточки чужих авторов`);
+    }
+    await Card.deleteOne(card);
+    return res.status(200).send({
+      message: `${card} - delete `
     });
+  } catch (err) {
+    if (err.name === 'CastError') {
+      next(new BadRequest(`${err}`));
+      return;
+    }
+    if (err.name === 'DocumentNotFoundError') {
+      next(new NotFound(`Карточка  ${id} не найдена`));
+      return;
+    }
+    next(err);
+  }
 }
 
 // PUT /cards/:cardId/likes — поставить лайк карточке
-function putLike(req, res) {
+function putLike(req, res, next) {
   const { id } = req.params;
   Card.findByIdAndUpdate(id, { $addToSet: { likes: req.user._id } }, { new: true })
     .orFail()
@@ -67,29 +70,20 @@ function putLike(req, res) {
       res.status(200).send(card);
     })
     .catch(err => {
-      if (err.name === 'DocumentNotFoundError') {
-        return res.status(404).send({
-          message: 'Произошла ошибка: Not Found («не найдено»)'
-        });
-      }
       if (err.name === 'CastError') {
-        return res.status(400).send({
-          message: `Произошла ошибка: Bad Request («неправильный, некорректный запрос»)`
-        });
+        next(new BadRequest(`${err}`));
+        return;
       }
       if (err.name === 'DocumentNotFoundError') {
-        return res.status(404).send({
-          message: 'Произошла ошибка: Not Found («не найдено»)'
-        });
+        next(new NotFound(`Карточка  ${id} не найдена`));
+        return;
       }
-      return res.status(500).send({
-        message: `Произошла ошибка: Server Error (ошибка сервера)}`
-      });
+      next(err);
     });
 }
 
 // DELETE /cards/:cardId/likes — убрать лайк с карточки
-function deleteLike(req, res) {
+function deleteLike(req, res, next) {
   const { id } = req.params;
   Card.findByIdAndUpdate(id, { $pull: { likes: req.user._id } }, { new: true })
     .orFail()
@@ -97,17 +91,15 @@ function deleteLike(req, res) {
       res.status(200).send(card);
     })
     .catch(err => {
-      if (err.name === 'DocumentNotFoundError') {
-        return res.status(404).send({ message: 'Произошла ошибка: Not Found («не найдено»)' });
-      }
       if (err.name === 'CastError') {
-        return res.status(400).send({
-          message: `Произошла ошибка: Bad Request («неправильный, некорректный запрос»)`
-        });
+        next(new BadRequest(`${err}`));
+        return;
       }
-      return res.status(500).send({
-        message: `Произошла ошибка: Server Error (ошибка сервера)}`
-      });
+      if (err.name === 'DocumentNotFoundError') {
+        next(new NotFound(`Карточка  ${id} не найдена`));
+        return;
+      }
+      next(err);
     });
 }
 

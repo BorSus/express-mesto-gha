@@ -4,28 +4,40 @@ const validator = require('validator');
 
 const userSchema = new mongoose.Schema(
   {
-    //  name — имя пользователя, строка от 2 до 30 символов, обязательное поле;
+    email: {
+      type: String,
+      validate: {
+        validator: v => validator.isEmail(v),
+        message: 'Некорректный Email'
+      },
+      required: [true, 'Поле "email" не может быть пустым'],
+      unique: true
+    },
+    password: {
+      type: String,
+      required: [true, 'Поле "password" не может быть пустым'],
+      minlength: [8, 'Минимальная длина поля "password" - 8'],
+      select: false
+    },
     name: {
       type: String,
-      required: [true, 'Поле "name" не может быть пустым'],
       minlength: [2, 'Минимальная длина поля "name" - 2'],
-      maxlength: [30, 'Максимальная длина поля "name" - 30']
+      maxlength: [30, 'Максимальная длина поля "name" - 30'],
+      default: 'Жак-Ив Кусто'
     },
-    //  about — информация о пользователе, строка от 2 до 30 символов, обязательное поле;
     about: {
       type: String,
-      required: [true, 'Поле "name" не может быть пустым'],
-      minlength: [2, 'Минимальная длина поля "name" - 2'],
-      maxlength: [30, 'Максимальная длина поля "name" - 30']
+      minlength: [2, 'Минимальная длина поля "about" - 2'],
+      maxlength: [30, 'Максимальная длина поля "about" - 30'],
+      default: 'Исследователь'
     },
-    //  avatar — ссылка на аватарку, строка, обязательное поле. В следующем спринте вы напишите собственное решение для валидации этого поля.
     avatar: {
       type: String,
       validate: {
         validator: v => validator.isURL(v),
         message: 'Некорректный URL'
       },
-      required: true
+      default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png'
     }
   },
   { versionKey: false }
