@@ -22,11 +22,6 @@ const validatorSchemaLogin = celebrate({
 
 // Users
 // GET /users/me
-const validatorSchemaGetCurrentUser = celebrate({
-  params: Joi.object().keys({
-    id: Joi.string().hex().length(24).required()
-  })
-});
 // GET /users/:userId - возвращает пользователя по _id
 const validatorSchemaGetUserById = celebrate({
   params: Joi.object().keys({
@@ -67,7 +62,6 @@ module.exports = {
   validatorSchemaPostNewUser,
   validatorSchemaLogin,
   validatorSchemaGetUserById,
-  validatorSchemaGetCurrentUser,
   validatorSchemaPatchUserInfo,
   validatorSchemaPatchUserAvatar,
   validatorSchemaPostCard,
