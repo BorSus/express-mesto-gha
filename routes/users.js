@@ -12,7 +12,7 @@ const {
   patchUserAvatar
 } = require('../controllers/users');
 // GET /users/me
-router.get('/users/me', validatorSchemaGetUserById, getCurrentUser);
+router.get('/users/me', getCurrentUser);
 //  GET /users/:userId - возвращает пользователя по _id
 router.get('/users/:id', validatorSchemaGetUserById, getUserById);
 
