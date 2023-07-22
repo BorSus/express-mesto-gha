@@ -11,10 +11,10 @@ const {
   patchUserInfo,
   patchUserAvatar
 } = require('../controllers/users');
-//  GET /users/:userId - возвращает пользователя по _id
-router.get('/users/:id', validatorSchemaGetUserById, getUserById);
 // GET /users/me
 router.get('/users/me', validatorSchemaGetUserById, getCurrentUser);
+//  GET /users/:userId - возвращает пользователя по _id
+router.get('/users/:id', validatorSchemaGetUserById, getUserById);
 
 //  GET /users — возвращает всех пользователей
 router.get('/users', getAllUsers);

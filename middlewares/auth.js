@@ -28,7 +28,7 @@ function checkAuthorization(req, res, next) {
   if (!payload) {
     throw new Unauthorized(`Токен не прошел проверку`);
   }
-  console.log(payload.payload._id);
+
   req.user = payload.payload;
 
   next();
