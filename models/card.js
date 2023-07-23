@@ -44,3 +44,4 @@ const cardSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model('card', cardSchema);
+// Лишний код следует удалить, его не нужно загружать в git OK
