@@ -13,9 +13,7 @@ const Unauthorized = require('../utils/errors/unauthorized');
 async function postNewUser(req, res, next) {
   try {
     const { email, password, name, about, avatar } = req.body;
-    if (!password) {
-      throw new BadRequest('password должен быть заполнен');
-    }
+    // Проверки на наличие полей в контроллерах следует удалить OK
     const hashPassword = await bcrypt.hash(password, 10);
     const user = await User.create({ email, password: hashPassword, name, about, avatar });
     res.status(201).send({
@@ -29,7 +27,8 @@ async function postNewUser(req, res, next) {
       next(new NotUnique(`Пользователь с таким email уже зарегистрирован`));
       return;
     }
-    if (err.name === 'CastError' || err.name === 'ValidationError') {
+    // проверка на ошибку CastError лишняя OK
+    if (err.name === 'ValidationError') {
       next(
         new BadRequest(
           `${Object.values(err.errors)
@@ -47,9 +46,7 @@ async function postNewUser(req, res, next) {
 async function login(req, res, next) {
   const { email, password } = req.body;
   try {
-    if (!email || !password) {
-      throw new BadRequest(`Не получен email(${email}) или password (${password})`);
-    }
+    // Проверки на наличие полей в контроллерах следует удалить OK
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
       throw new Unauthorized(`Неправильный email или password`);
@@ -61,6 +58,7 @@ async function login(req, res, next) {
     const payload = { _id: user._id };
     const token = createToken(payload);
     res.cookie('jwt', token, { maxAge: 1000 * 60 * 60 * 24 * 7, httpOnly: true });
+
     res.status(200).send({ token });
   } catch (err) {
     next(err);
@@ -73,7 +71,8 @@ function getCurrentUser(req, res, next) {
       if (!user) {
         throw new NotFound('Пользователь не найден.');
       }
-      res.status(200).send(user);
+      // Статус 200 добавляется по дефолту, поэтому его можно не указывать OK
+      res.send(user);
     })
     .catch(next);
 }
@@ -99,7 +98,8 @@ function getUserById(req, res, next) {
         return;
       }
       if (err.name === 'CastError') {
-        next(new BadRequest(`${err}`));
+        // Следует передать не саму ошибку, а только текст о том, что id некорректный OK
+        next(new BadRequest(`Переданный id [${id}] пользователя некорректный`));
         return;
       }
       next(err);
@@ -113,7 +113,8 @@ function patchUserInfo(req, res, next) {
     .orFail()
     .then(user => res.status(200).send(user))
     .catch(err => {
-      if (err.name === 'CastError' || err.name === 'ValidationError') {
+      // проверка на ошибку CastError лишняя OK
+      if (err.name === 'ValidationError') {
         next(
           new BadRequest(
             `${Object.values(err.errors)
@@ -137,7 +138,8 @@ function patchUserAvatar(req, res, next) {
     .orFail()
     .then(user => res.status(200).send(user))
     .catch(err => {
-      if (err.name === 'CastError' || err.name === 'ValidationError') {
+      // проверка на ошибку CastError лишняя OK
+      if (err.name === 'ValidationError') {
         next(
           new BadRequest(
             `${Object.values(err.errors)

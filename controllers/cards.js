@@ -1,12 +1,11 @@
 const Card = require('../models/card');
 const NotFound = require('../utils/errors/not-found');
 const BadRequest = require('../utils/errors/bad-request');
-const Unauthorized = require('../utils/errors/unauthorized');
 const Forbidden = require('../utils/errors/no-access');
 // GET /cards — возвращает все карточки
 function getAllCards(req, res, next) {
   Card.find({})
-    .then(cards => res.status(200).send(cards))
+    .then(cards => res.send(cards))
     .catch(next);
 }
 
@@ -14,13 +13,12 @@ function getAllCards(req, res, next) {
 function postCard(req, res, next) {
   const { name, link } = req.body;
   const owner = req.user._id;
-  if (!owner) {
-    throw new Unauthorized(`Пользователь не авторизован`);
-  }
+  // проверка owner лишняя, ее следует удалить, так как создание пользователя уже защищено авторизацией и проверять id не нужно OK
   Card.create({ name, link, owner })
     .then(card => res.status(201).send(card))
     .catch(err => {
-      if (err.name === 'CastError' || err.name === 'ValidationError') {
+      // проверка на ошибку CastError лишняя OK
+      if (err.name === 'ValidationError') {
         next(
           new BadRequest(
             `${Object.values(err.errors)
@@ -45,15 +43,17 @@ async function deleteCard(req, res, next) {
     }
     await Card.deleteOne(card);
     res.status(200).send({
-      message: `${card} - delete `
+      // Следует передать только сообщение об удалении OK
+      message: `Карточка id[${id}] удалена`
     });
   } catch (err) {
     if (err.name === 'CastError') {
-      next(new BadRequest(`${err}`));
+      // Следует передать не саму ошибку, а только текст о том, что id некорректный OK
+      next(new BadRequest(`Переданный id [${id}] карточки некорректный`));
       return;
     }
     if (err.name === 'DocumentNotFoundError') {
-      next(new NotFound(`Карточка  ${id} не найдена`));
+      next(new NotFound(`Карточка [${id}] не найдена`));
       return;
     }
     next(err);
@@ -70,11 +70,12 @@ function putLike(req, res, next) {
     })
     .catch(err => {
       if (err.name === 'CastError') {
-        next(new BadRequest(`${err}`));
+        // Следует передать не саму ошибку, а только текст о том, что id некорректный OK
+        next(new BadRequest(`Переданный id[${id}] карточки некорректный`));
         return;
       }
       if (err.name === 'DocumentNotFoundError') {
-        next(new NotFound(`Карточка  ${id} не найдена`));
+        next(new NotFound(`Карточка  id[${id}] не найдена`));
         return;
       }
       next(err);
@@ -90,8 +91,9 @@ function deleteLike(req, res, next) {
       res.status(200).send(card);
     })
     .catch(err => {
+      // Следует передать не саму ошибку, а только текст о том, что id некорректный OK
       if (err.name === 'CastError') {
-        next(new BadRequest(`${err}`));
+        next(new BadRequest(`Переданный id[${id}] карточки некорректный`));
         return;
       }
       if (err.name === 'DocumentNotFoundError') {

@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: [true, 'Поле "password" не может быть пустым'],
-      minlength: [8, 'Минимальная длина поля "password" - 8'],
+      // Поле password не ограничено в длину, так как пароль хранится в виде хеша OK
       select: false
     },
     name: {
@@ -44,3 +44,4 @@ const userSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model('user', userSchema);
+// Лишний код следует удалить, его не нужно загружать в git OK
