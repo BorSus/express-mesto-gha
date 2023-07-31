@@ -57,8 +57,13 @@ async function login(req, res, next) {
     }
     const payload = { _id: user._id };
     const token = createToken(payload);
-    res.cookie('jwt', token, { maxAge: 1000 * 60 * 60 * 24 * 7, httpOnly: true });
-
+    res.cookie('jwt', token, {
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+      httpOnly: true,
+      //sameSite: true
+      secure: true,
+      sameSite: 'none'
+    });
     res.status(200).send({ token });
   } catch (err) {
     next(err);
