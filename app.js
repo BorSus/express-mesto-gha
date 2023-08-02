@@ -16,7 +16,7 @@ const controlErrors = require('./middlewares/controlErrors');
 
 const { validatorSchemaPostNewUser, validatorSchemaLogin } = require('./middlewares/validator');
 
-const { corsMiddleware } = require('./middlewares/cors');
+//const { corsMiddleware } = require('./middlewares/cors');
 
 const { postNewUser, login } = require('./controllers/users');
 
@@ -33,10 +33,11 @@ app.use(helmet());
 app.use(
   cors({
     origin: [
-      'http://mesto.sustavov.nomoreparties.co/',
-      'https://mesto.sustavov.nomoreparties.co/',
-      'localhost:3000'
+      'http://localhost:3000',
+      'https://mesto.sustavov.nomoreparties.co',
+      'https://mesto.sustavov.nomoreparties.co'
     ],
+
     credentials: true
   })
 );
@@ -55,7 +56,7 @@ mongoose
 // подключаем логгер запросов
 app.use(requestLogger);
 // подключаем CORS мидлвару
-app.use(corsMiddleware);
+//app.use(corsMiddleware);
 //  Подключение путей авторизации
 //  POST /signup — создаёт пользователя
 app.post('/signup', validatorSchemaPostNewUser, postNewUser);
