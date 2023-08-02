@@ -64,7 +64,7 @@ async function login(req, res, next) {
       secure: true,
       sameSite: 'none'
     });
-    res.status(200).send({ token });
+    res.status(200).send(`Пользователь ${email} авторизирован. JWT сохранен в cookie`);
   } catch (err) {
     next(err);
   }
