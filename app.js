@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 
 const mongoose = require('mongoose');
@@ -26,14 +28,17 @@ const { requestLogger, errorLogger } = require('./middlewares/logger');
 
 const NotFound = require('./utils/errors/not-found');
 
-const { PORT = 5000, DB_URL = 'mongodb://127.0.0.1:27017/mestodb' } = process.env;
+const { PORT = 3000, DB_URL = 'mongodb://127.0.0.1:27017/mestodb' } = process.env;
 
 const app = express();
+
 app.use(helmet());
+// подключаем CORS мидлвару
+//  app.use(corsMiddleware);
 app.use(
   cors({
     origin: [
-      'http://localhost:3000',
+      'http://localhost:3001',
       'http://mesto.sustavov.nomoreparties.co',
       'https://mesto.sustavov.nomoreparties.co'
     ],
@@ -55,8 +60,7 @@ mongoose
 
 // подключаем логгер запросов
 app.use(requestLogger);
-// подключаем CORS мидлвару
-//app.use(corsMiddleware);
+
 //  Подключение путей авторизации
 //  POST /signup — создаёт пользователя
 app.post('/signup', validatorSchemaPostNewUser, postNewUser);
